@@ -72,5 +72,5 @@ Alterações em desenvolvimento para a próxima versão da aplicação.
 * Execução dos testes com zero falhas e zero erros.
 * Compilação finalizada com `BUILD SUCCESS`.
 
-[Não publicado]: https://github.com/andregasparinfnet/andre-gaspar-api/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/andregasparinfnet/andre-gaspar-api/tree/v0.1.0
+[Não publicado]: https://github.com/andregasparinfnet/andre-gaspar-api/compare/etapa-1...HEAD
+[0.1.0]: https://github.com/andregasparinfnet/andre-gaspar-api/tree/etapa-1
