@@ -1,11 +1,13 @@
 package br.edu.infnet.andre_gaspar_api.service;
 
+import br.edu.infnet.andre_gaspar_api.enums.StatusNomeacao;
 import br.edu.infnet.andre_gaspar_api.exception.DadosInvalidosException;
 import br.edu.infnet.andre_gaspar_api.exception.EntidadeJaExistenteException;
 import br.edu.infnet.andre_gaspar_api.exception.EntidadeNaoEncontradaException;
 import br.edu.infnet.andre_gaspar_api.model.NomeacaoPericial;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,6 +75,59 @@ public class NomeacaoPericialService
     @Override
     public List<NomeacaoPericial> listarTodos() {
         return new ArrayList<>(nomeacoes.values());
+    }
+
+    public List<NomeacaoPericial> listarPorStatus(
+            StatusNomeacao status
+    ) {
+        if (status == null) {
+            throw new DadosInvalidosException(
+                    "O status da nomeação é obrigatório"
+            );
+        }
+
+        return nomeacoes.values()
+                .stream()
+                .filter(nomeacao -> nomeacao.getStatus() == status)
+                .toList();
+    }
+
+    public List<NomeacaoPericial> listarOrdenadasPorPrazo() {
+        return nomeacoes.values()
+                .stream()
+                .sorted(Comparator.comparing(
+                        NomeacaoPericial::getDataLimite
+                ))
+                .toList();
+    }
+
+    public NomeacaoPericial obterPorNumeroProcesso(
+            String numeroProcesso
+    ) {
+        if (numeroProcesso == null || numeroProcesso.isBlank()) {
+            throw new DadosInvalidosException(
+                    "O número do processo é obrigatório"
+            );
+        }
+
+        return nomeacoes.values()
+                .stream()
+                .filter(nomeacao -> nomeacao.getNumeroProcesso()
+                        .equals(numeroProcesso))
+                .findFirst()
+                .orElseThrow(() ->
+                        new EntidadeNaoEncontradaException(
+                                "Nomeação não encontrada para o processo: "
+                                        + numeroProcesso
+                        )
+                );
+    }
+
+    public List<String> listarNumerosProcessos() {
+        return nomeacoes.values()
+                .stream()
+                .map(NomeacaoPericial::getNumeroProcesso)
+                .toList();
     }
 
     private void validarNomeacao(NomeacaoPericial nomeacao) {

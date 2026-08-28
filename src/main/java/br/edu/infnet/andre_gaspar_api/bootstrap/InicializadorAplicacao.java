@@ -1,5 +1,5 @@
 package br.edu.infnet.andre_gaspar_api.bootstrap;
-
+import br.edu.infnet.andre_gaspar_api.enums.StatusNomeacao;
 import br.edu.infnet.andre_gaspar_api.loader.AtividadeLoader;
 import br.edu.infnet.andre_gaspar_api.loader.NomeacaoLoader;
 import br.edu.infnet.andre_gaspar_api.loader.PeritoLoader;
@@ -71,6 +71,40 @@ public class InicializadorAplicacao implements CommandLineRunner {
         );
         System.out.println(
                 "Atividades carregadas: " + atividades.size()
+        );
+        System.out.println();
+        System.out.println("------- CONSULTAS COM STREAMS -----------");
+
+        System.out.println(
+                "Nomeacoes recebidas: "
+                        + nomeacaoService
+                        .listarPorStatus(StatusNomeacao.RECEBIDA)
+                        .size()
+        );
+
+        System.out.println(
+                "Numeros dos processos: "
+                        + nomeacaoService.listarNumerosProcessos()
+        );
+
+        System.out.println("Nomeacoes ordenadas por prazo:");
+
+        for (NomeacaoPericial nomeacao
+                : nomeacaoService.listarOrdenadasPorPrazo()) {
+            System.out.println(
+                    "  " + nomeacao.getDataLimite()
+                            + " - " + nomeacao.getNumeroProcesso()
+            );
+        }
+
+        NomeacaoPericial nomeacaoEncontrada =
+                nomeacaoService.obterPorNumeroProcesso(
+                        "0000001-00.2026.8.00.0001"
+                );
+
+        System.out.println(
+                "Busca por numero: "
+                        + nomeacaoEncontrada.getNumeroProcesso()
         );
         System.out.println("========================================");
         System.out.println();
