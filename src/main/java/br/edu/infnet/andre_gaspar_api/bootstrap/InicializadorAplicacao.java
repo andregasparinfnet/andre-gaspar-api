@@ -6,6 +6,9 @@ import br.edu.infnet.andre_gaspar_api.loader.PeritoLoader;
 import br.edu.infnet.andre_gaspar_api.model.AtividadePericial;
 import br.edu.infnet.andre_gaspar_api.model.NomeacaoPericial;
 import br.edu.infnet.andre_gaspar_api.model.Perito;
+import br.edu.infnet.andre_gaspar_api.service.AtividadePericialService;
+import br.edu.infnet.andre_gaspar_api.service.NomeacaoPericialService;
+import br.edu.infnet.andre_gaspar_api.service.PeritoService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -20,18 +23,24 @@ public class InicializadorAplicacao implements CommandLineRunner {
         NomeacaoLoader nomeacaoLoader = new NomeacaoLoader();
         AtividadeLoader atividadeLoader = new AtividadeLoader();
 
-        List<Perito> peritos = peritoLoader.carregar();
+        PeritoService peritoService = new PeritoService();
+        NomeacaoPericialService nomeacaoService =
+                new NomeacaoPericialService();
+        AtividadePericialService atividadeService =
+                new AtividadePericialService();
+
+        List<Perito> peritos = peritoLoader.carregar(peritoService);
 
         List<NomeacaoPericial> nomeacoes =
-                nomeacaoLoader.carregar(peritos);
+                nomeacaoLoader.carregar(peritoService,nomeacaoService);
 
         List<AtividadePericial> atividades =
-                atividadeLoader.carregar(nomeacoes);
+                atividadeLoader.carregar(nomeacaoService,atividadeService);
 
         System.out.println();
         System.out.println("========================================");
         System.out.println("  SISTEMA DE GESTAO DE PERICIAS");
-        System.out.println("  ETAPA 1 - ORIENTACAO A OBJETOS");
+        System.out.println("  ETAPA 2 - ESTRUTURAS DE DADOS E SERVICOS");
         System.out.println("========================================");
 
         for (Perito perito : peritos) {

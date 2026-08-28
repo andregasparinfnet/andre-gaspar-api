@@ -1,19 +1,19 @@
 package br.edu.infnet.andre_gaspar_api.loader;
 
 import br.edu.infnet.andre_gaspar_api.model.Perito;
+import br.edu.infnet.andre_gaspar_api.service.PeritoService;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 
 public class PeritoLoader {
 
-    public List<Perito> carregar() throws IOException {
-        List<Perito> peritos = new ArrayList<>();
+    public List<Perito> carregar(PeritoService peritoService)
+            throws IOException {
 
         ClassPathResource arquivo =
                 new ClassPathResource("dados/peritos.txt");
@@ -40,10 +40,11 @@ public class PeritoLoader {
                 String email = campos[2];
 
                 Perito perito = new Perito(id, nome, email);
-                peritos.add(perito);
+
+                peritoService.incluir(perito);
             }
         }
 
-        return peritos;
+        return peritoService.listarTodos();
     }
 }

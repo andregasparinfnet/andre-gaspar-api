@@ -4,6 +4,8 @@ import br.edu.infnet.andre_gaspar_api.enums.StatusNomeacao;
 import br.edu.infnet.andre_gaspar_api.model.HonorariosPericiais;
 import br.edu.infnet.andre_gaspar_api.model.NomeacaoPericial;
 import br.edu.infnet.andre_gaspar_api.model.Perito;
+import br.edu.infnet.andre_gaspar_api.service.NomeacaoPericialService;
+import br.edu.infnet.andre_gaspar_api.service.PeritoService;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.BufferedReader;
@@ -12,15 +14,14 @@ import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 public class NomeacaoLoader {
 
-    public List<NomeacaoPericial> carregar(List<Perito> peritos)
-            throws IOException {
-
-        List<NomeacaoPericial> nomeacoes = new ArrayList<>();
+    public List<NomeacaoPericial> carregar(
+            PeritoService peritoService,
+            NomeacaoPericialService nomeacaoService
+    ) throws IOException {
 
         ClassPathResource arquivo =
                 new ClassPathResource("dados/nomeacoes.txt");
@@ -87,28 +88,13 @@ public class NomeacaoLoader {
 
                 nomeacao.alterarStatus(status);
 
-                Perito perito = buscarPerito(peritos, peritoId);
+                Perito perito = peritoService.obterPorId(peritoId);
                 perito.adicionarNomeacao(nomeacao);
 
-                nomeacoes.add(nomeacao);
+                nomeacaoService.incluir(nomeacao);
             }
         }
 
-        return nomeacoes;
-    }
-
-    private Perito buscarPerito(
-            List<Perito> peritos,
-            Long peritoId
-    ) {
-        for (Perito perito : peritos) {
-            if (perito.getId().equals(peritoId)) {
-                return perito;
-            }
-        }
-
-        throw new IllegalArgumentException(
-                "Perito não encontrado: " + peritoId
-        );
+        return nomeacaoService.listarTodos();
     }
 }
