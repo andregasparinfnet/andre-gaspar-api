@@ -8,9 +8,61 @@ O formato é baseado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.
 
 Alterações em desenvolvimento para a próxima versão da aplicação.
 
+## [0.2.0] — 2026-08-28
+
+**Marco acadêmico:** `etapa-2`
+
+**Competência:** Estruturas de Dados e Camada de Serviço
+
+### Adicionado
+
+* Interface genérica `CrudService<T, ID>` com operações CRUD.
+* Classe `PeritoService` para gerenciamento dos peritos em memória.
+* Classe `NomeacaoPericialService` para gerenciamento das nomeações.
+* Classe `AtividadePericialService` para gerenciamento das atividades.
+* Estruturas `LinkedHashMap` utilizando o identificador como chave e o
+  objeto correspondente como valor.
+* Operações para incluir, alterar, excluir, obter por identificador e listar
+  objetos.
+* Exceção `DadosInvalidosException`.
+* Exceção `EntidadeJaExistenteException`.
+* Exceção `EntidadeNaoEncontradaException`.
+* Consulta de nomeações por status utilizando `filter`.
+* Ordenação de nomeações por prazo utilizando `sorted`.
+* Busca de nomeação pelo número do processo utilizando `findFirst`.
+* Transformação das nomeações em números processuais utilizando `map`.
+* Demonstração das consultas com Streams no console.
+* Testes unitários do serviço de nomeações.
+* Teste integrado da leitura dos arquivos e carga nos Services.
+
+### Alterado
+
+* Loaders integrados à camada de serviço.
+* Dados lidos dos arquivos-texto armazenados nos Maps.
+* Busca de peritos e nomeações realizada pelos respectivos Services.
+* Relacionamentos um-para-muitos preservados durante a carga dos dados.
+* Inicializador atualizado para demonstrar a arquitetura da Etapa 2.
+* Saída do console atualizada com consultas baseadas em Streams.
+* Documentação atualizada para a Etapa 2.
+* Versão do projeto atualizada para `0.2.0`.
+
+### Validado
+
+* Armazenamento de um perito, duas nomeações e quatro atividades nos Maps.
+* Relacionamento entre o perito e suas duas nomeações.
+* Relacionamento entre as nomeações e suas respectivas atividades.
+* Operações de inclusão, alteração, exclusão, consulta e listagem.
+* Tratamento de identificador duplicado.
+* Tratamento de entidade inexistente.
+* Filtragem, ordenação, busca e transformação de coleções.
+* Leitura dos três arquivos-texto.
+* Execução de seis testes com zero falhas e zero erros.
+* Compilação finalizada com `BUILD SUCCESS`.
+
 ## [0.1.0] — 2026-08-27
 
 **Marco acadêmico:** `etapa-1`
+
 **Competência:** Orientação a Objetos Avançada
 
 ### Adicionado
@@ -72,5 +124,6 @@ Alterações em desenvolvimento para a próxima versão da aplicação.
 * Execução dos testes com zero falhas e zero erros.
 * Compilação finalizada com `BUILD SUCCESS`.
 
-[Não publicado]: https://github.com/andregasparinfnet/andre-gaspar-api/compare/etapa-1...HEAD
+[Não publicado]: https://github.com/andregasparinfnet/andre-gaspar-api/compare/etapa-2...HEAD
+[0.2.0]: https://github.com/andregasparinfnet/andre-gaspar-api/tree/etapa-2
 [0.1.0]: https://github.com/andregasparinfnet/andre-gaspar-api/tree/etapa-1

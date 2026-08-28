@@ -8,18 +8,21 @@ exclusivamente à demonstração acadêmica.
 
 ## Etapa atual
 
-Etapa 1 — Orientação a Objetos Avançada.
+Etapa 2 — Estruturas de Dados e Camada de Serviço.
 
-Nesta etapa, a aplicação realiza a modelagem do domínio, lê dados de
-arquivos-texto, cria objetos Java, estabelece seus relacionamentos e
-apresenta os resultados no console.
+Nesta etapa, os dados fictícios são lidos dos arquivos-texto, relacionados
+pelos Loaders e armazenados em memória pelos Services, utilizando
+`Map<Long, Objeto>`. A aplicação também demonstra operações CRUD,
+Generics, lambdas e Streams.
 
-Ainda não existem camada de serviço, API REST, persistência com JPA ou
-banco de dados. Esses recursos serão introduzidos nas etapas seguintes.
+Ainda não existem API REST, Controllers, persistência com JPA ou banco de
+dados. Esses recursos serão introduzidos nas etapas seguintes.
 
 ## Tecnologias
 
 - Java 21
+- Java Collections Framework
+- Lambdas e Streams
 - Spring Boot 4.1.1
 - Maven
 - JUnit
@@ -38,7 +41,7 @@ O modelo possui as seguintes classes principais:
 Também existe o enum `StatusNomeacao`, que limita os estados possíveis
 de uma nomeação pericial.
 
-## Diagrama de classes da Etapa 1
+## Diagrama de classes do domínio
 
 ```mermaid
 classDiagram
@@ -143,6 +146,78 @@ Nesta etapa, os relacionamentos são representados por coleções Java em
 memória. As anotações JPA serão introduzidas somente na etapa de
 persistência.
 
+## Arquitetura da Etapa 2
+
+A aplicação utiliza armazenamento temporário em memória. Os Loaders leem
+os arquivos-texto e encaminham os objetos para a camada de serviço, que
+encapsula os Maps.
+
+```mermaid
+flowchart LR
+    A[Inicializador] --> L[Loaders]
+    L --> S[Services]
+    S --> M[(Maps em memória)]
+```
+
+O fluxo de carga é:
+
+- `PeritoLoader` → `PeritoService` → `Map<Long, Perito>`;
+- `NomeacaoLoader` → `NomeacaoPericialService` →
+  `Map<Long, NomeacaoPericial>`;
+- `AtividadeLoader` → `AtividadePericialService` →
+  `Map<Long, AtividadePericial>`.
+
+## Camada de serviço
+
+A interface genérica:
+
+```java
+CrudService<T, ID>
+```
+
+define as operações comuns:
+
+- `incluir(T objeto)`;
+- `alterar(T objeto)`;
+- `excluir(ID id)`;
+- `obterPorId(ID id)`;
+- `listarTodos()`.
+
+As implementações são:
+
+- `PeritoService`;
+- `NomeacaoPericialService`;
+- `AtividadePericialService`.
+
+Cada Service mantém seu próprio `LinkedHashMap`, utilizando o identificador
+do objeto como chave e o próprio objeto como valor. O armazenamento fica
+encapsulado e somente pode ser manipulado pelas operações da camada de
+serviço.
+
+## Consultas com lambdas e Streams
+
+O `NomeacaoPericialService` possui consultas coerentes com o domínio:
+
+- `listarPorStatus()`: filtra nomeações pelo status;
+- `listarOrdenadasPorPrazo()`: ordena nomeações pela data-limite;
+- `obterPorNumeroProcesso()`: busca uma nomeação pelo número do processo;
+- `listarNumerosProcessos()`: transforma objetos em uma lista de números
+  processuais.
+
+Essas operações demonstram o uso de `filter`, `sorted`, `findFirst`, `map`,
+lambdas e referências de métodos.
+
+## Tratamento de exceções
+
+A camada de serviço utiliza exceções específicas:
+
+- `DadosInvalidosException`: informa o fornecimento de dados inválidos;
+- `EntidadeJaExistenteException`: impede a inclusão de identificadores
+  duplicados;
+- `EntidadeNaoEncontradaException`: informa tentativas de recuperar,
+  alterar ou excluir objetos inexistentes.
+
+
 ## Tipos de atributos
 
 O modelo utiliza diferentes tipos de informação:
@@ -173,8 +248,13 @@ A leitura é realizada pelas seguintes classes:
 - `NomeacaoLoader`;
 - `AtividadeLoader`.
 
-Os Loaders criam os objetos e estabelecem os relacionamentos entre
-peritos, nomeações e atividades.
+O arquivo `nomeacoes.txt` possui o campo `peritoId`, enquanto
+`atividades.txt` possui o campo `nomeacaoId`. Esses identificadores permitem
+estabelecer os relacionamentos um-para-muitos durante a carga.
+
+Os Loaders criam os objetos, recuperam seus objetos relacionados pelos
+Services e estabelecem as associações. Em seguida, cada objeto é incluído
+no `Map` do respectivo Service.
 
 ## Inicialização e teste do modelo
 
@@ -182,12 +262,15 @@ A classe `InicializadorAplicacao` implementa `CommandLineRunner`.
 
 Durante a inicialização, a aplicação:
 
-1. lê os arquivos-texto;
-2. cria os objetos;
-3. associa as nomeações ao perito;
-4. associa as atividades às nomeações;
-5. apresenta os objetos no console;
-6. exibe um resumo da carga realizada.
+1. cria os três Services e seus Maps;
+2. lê os arquivos-texto;
+3. cria os objetos;
+4. associa as nomeações ao perito;
+5. associa as atividades às nomeações;
+6. inclui os objetos nos respectivos Services;
+7. recupera os dados armazenados em memória;
+8. executa consultas com Streams;
+9. apresenta os objetos e o resumo no console.
 
 ## Como testar
 
@@ -200,9 +283,19 @@ No Linux ou WSL:
 Resultado esperado:
 
 ```text
-Tests run: 1, Failures: 0, Errors: 0
+Tests run: 6, Failures: 0, Errors: 0
 BUILD SUCCESS
 ```
+
+Os testes validam:
+
+- inicialização do contexto Spring Boot;
+- operações CRUD do serviço de nomeações;
+- tratamento de duplicidade e entidade inexistente;
+- consultas com Streams;
+- leitura dos três arquivos-texto;
+- armazenamento nos Services;
+- relacionamentos um-para-muitos.
 
 ## Como executar
 
@@ -221,24 +314,24 @@ Nomeacoes carregadas: 2
 Atividades carregadas: 4
 ```
 
-## Limites da Etapa 1
+## Limites da Etapa 2
 
 Nesta etapa, ainda não foram implementados:
 
-- camada de serviço;
-- armazenamento com `Map`;
 - API REST;
 - Controllers;
-- JPA;
+- DTOs;
+- persistência com JPA;
 - Repositories;
 - banco de dados.
 
-Esses recursos serão introduzidos progressivamente nas próximas etapas.
+O armazenamento atual com `Map` é temporário e será substituído pelo
+Spring Data JPA na Etapa 4.
 
 ## Evolução planejada
 
-- Etapa 1: orientação a objetos e arquivos-texto;
-- Etapa 2: Collections, Map e camada de serviço;
+- Etapa 1: orientação a objetos e arquivos-texto — concluída;
+- Etapa 2: Collections, Map e camada de serviço — etapa atual;
 - Etapa 3: API REST com Spring Boot;
 - Etapa 4: persistência com Spring Data JPA.
 
@@ -247,7 +340,7 @@ Esses recursos serão introduzidos progressivamente nas próximas etapas.
 A conclusão desta versão será registrada com a tag Git:
 
 ```text
-etapa-1
+etapa-2
 ```
 
 ## Uso de inteligência artificial
