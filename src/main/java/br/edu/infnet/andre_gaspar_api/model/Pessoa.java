@@ -1,6 +1,6 @@
 package br.edu.infnet.andre_gaspar_api.model;
 
-public abstract class Pessoa {
+public abstract class Pessoa implements Identificavel {
 
     private Long id;
     private String nome;
@@ -12,6 +12,7 @@ public abstract class Pessoa {
         this.email = email;
     }
 
+    @Override
     public Long getId() {
         return id;
     }

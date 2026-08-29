@@ -175,7 +175,7 @@ A interface genérica:
 CrudService<T, ID>
 ```
 
-define as operações comuns:
+define o contrato das operações comuns:
 
 - `incluir(T objeto)`;
 - `alterar(T objeto)`;
@@ -183,16 +183,33 @@ define as operações comuns:
 - `obterPorId(ID id)`;
 - `listarTodos()`.
 
-As implementações são:
+A interface `Identificavel` estabelece que os objetos gerenciados pela
+camada de serviço devem disponibilizar seu identificador por meio do método
+`getId()`.
 
-- `PeritoService`;
-- `NomeacaoPericialService`;
-- `AtividadePericialService`.
+A classe abstrata genérica:
 
-Cada Service mantém seu próprio `LinkedHashMap`, utilizando o identificador
-do objeto como chave e o próprio objeto como valor. O armazenamento fica
-encapsulado e somente pode ser manipulado pelas operações da camada de
-serviço.
+```java
+BaseCrudService<T extends Identificavel>
+```
+
+implementa o contrato `CrudService<T, Long>` e centraliza:
+
+- o armazenamento em `LinkedHashMap<Long, T>`;
+- as operações CRUD;
+- a validação comum dos identificadores;
+- o tratamento de duplicidade e de entidades inexistentes.
+
+Os Services específicos herdam essa implementação:
+
+- `PeritoService extends BaseCrudService<Perito>`;
+- `NomeacaoPericialService extends BaseCrudService<NomeacaoPericial>`;
+- `AtividadePericialService extends BaseCrudService<AtividadePericial>`.
+
+Cada instância de Service possui seu próprio Map herdado, enquanto as
+classes específicas mantêm somente as validações e consultas relacionadas
+ao respectivo domínio. Essa organização reduz a duplicação do CRUD e
+demonstra o uso combinado de interfaces, herança, abstração e Generics.
 
 ## Consultas com lambdas e Streams
 

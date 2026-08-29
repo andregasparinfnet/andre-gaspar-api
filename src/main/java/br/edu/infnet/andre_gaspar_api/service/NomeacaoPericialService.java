@@ -2,81 +2,14 @@ package br.edu.infnet.andre_gaspar_api.service;
 
 import br.edu.infnet.andre_gaspar_api.enums.StatusNomeacao;
 import br.edu.infnet.andre_gaspar_api.exception.DadosInvalidosException;
-import br.edu.infnet.andre_gaspar_api.exception.EntidadeJaExistenteException;
 import br.edu.infnet.andre_gaspar_api.exception.EntidadeNaoEncontradaException;
 import br.edu.infnet.andre_gaspar_api.model.NomeacaoPericial;
 
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 public class NomeacaoPericialService
-        implements CrudService<NomeacaoPericial, Long> {
-
-    private final Map<Long, NomeacaoPericial> nomeacoes =
-            new LinkedHashMap<>();
-
-    @Override
-    public NomeacaoPericial incluir(NomeacaoPericial nomeacao) {
-        validarNomeacao(nomeacao);
-
-        if (nomeacoes.containsKey(nomeacao.getId())) {
-            throw new EntidadeJaExistenteException(
-                    "Já existe uma nomeação com o ID " + nomeacao.getId()
-            );
-        }
-
-        nomeacoes.put(nomeacao.getId(), nomeacao);
-        return nomeacao;
-    }
-
-    @Override
-    public NomeacaoPericial alterar(NomeacaoPericial nomeacao) {
-        validarNomeacao(nomeacao);
-
-        if (!nomeacoes.containsKey(nomeacao.getId())) {
-            throw new EntidadeNaoEncontradaException(
-                    "Nomeação não encontrada: " + nomeacao.getId()
-            );
-        }
-
-        nomeacoes.put(nomeacao.getId(), nomeacao);
-        return nomeacao;
-    }
-
-    @Override
-    public void excluir(Long id) {
-        validarId(id);
-
-        if (nomeacoes.remove(id) == null) {
-            throw new EntidadeNaoEncontradaException(
-                    "Nomeação não encontrada: " + id
-            );
-        }
-    }
-
-    @Override
-    public NomeacaoPericial obterPorId(Long id) {
-        validarId(id);
-
-        NomeacaoPericial nomeacao = nomeacoes.get(id);
-
-        if (nomeacao == null) {
-            throw new EntidadeNaoEncontradaException(
-                    "Nomeação não encontrada: " + id
-            );
-        }
-
-        return nomeacao;
-    }
-
-    @Override
-    public List<NomeacaoPericial> listarTodos() {
-        return new ArrayList<>(nomeacoes.values());
-    }
-
+        extends BaseCrudService<NomeacaoPericial> {
     public List<NomeacaoPericial> listarPorStatus(
             StatusNomeacao status
     ) {
@@ -85,15 +18,14 @@ public class NomeacaoPericialService
                     "O status da nomeação é obrigatório"
             );
         }
-
-        return nomeacoes.values()
+        return listarTodos()
                 .stream()
                 .filter(nomeacao -> nomeacao.getStatus() == status)
                 .toList();
     }
 
     public List<NomeacaoPericial> listarOrdenadasPorPrazo() {
-        return nomeacoes.values()
+        return listarTodos()
                 .stream()
                 .sorted(Comparator.comparing(
                         NomeacaoPericial::getDataLimite
@@ -110,7 +42,7 @@ public class NomeacaoPericialService
             );
         }
 
-        return nomeacoes.values()
+        return listarTodos()
                 .stream()
                 .filter(nomeacao -> nomeacao.getNumeroProcesso()
                         .equals(numeroProcesso))
@@ -124,21 +56,16 @@ public class NomeacaoPericialService
     }
 
     public List<String> listarNumerosProcessos() {
-        return nomeacoes.values()
+        return listarTodos()
                 .stream()
                 .map(NomeacaoPericial::getNumeroProcesso)
                 .toList();
     }
 
-    private void validarNomeacao(NomeacaoPericial nomeacao) {
-        if (nomeacao == null) {
-            throw new DadosInvalidosException(
-                    "Os dados da nomeação são obrigatórios"
-            );
-        }
-
-        validarId(nomeacao.getId());
-
+    @Override
+    protected void validarDadosEspecificos(
+            NomeacaoPericial nomeacao
+    ) {
         if (nomeacao.getNumeroProcesso() == null
                 || nomeacao.getNumeroProcesso().isBlank()) {
             throw new DadosInvalidosException(
@@ -164,13 +91,4 @@ public class NomeacaoPericialService
             );
         }
     }
-
-    private void validarId(Long id) {
-        if (id == null || id <= 0) {
-            throw new DadosInvalidosException(
-                    "O ID da nomeação deve ser positivo"
-            );
-        }
-    }
 }
-

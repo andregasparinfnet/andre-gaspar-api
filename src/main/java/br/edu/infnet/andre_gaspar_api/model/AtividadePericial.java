@@ -2,7 +2,7 @@ package br.edu.infnet.andre_gaspar_api.model;
 
 import java.time.LocalDate;
 
-public class AtividadePericial {
+public class AtividadePericial implements Identificavel {
 
     private Long id;
     private String descricao;
@@ -23,6 +23,7 @@ public class AtividadePericial {
         this.concluida = false;
     }
 
+    @Override
     public Long getId() {
         return id;
     }

@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class NomeacaoPericial {
+public class NomeacaoPericial implements Identificavel {
 
     private Long id;
     private String numeroProcesso;
@@ -35,6 +35,7 @@ public class NomeacaoPericial {
         this.atividades = new ArrayList<>();
     }
 
+    @Override
     public Long getId() {
         return id;
     }

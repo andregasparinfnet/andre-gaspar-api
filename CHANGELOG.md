@@ -17,6 +17,10 @@ Alterações em desenvolvimento para a próxima versão da aplicação.
 ### Adicionado
 
 * Interface genérica `CrudService<T, ID>` com operações CRUD.
+* Interface `Identificavel` para estabelecer o contrato de obtenção do
+  identificador dos objetos.
+* Classe abstrata genérica `BaseCrudService<T extends Identificavel>` para
+  centralizar o armazenamento em Map e as operações CRUD.
 * Classe `PeritoService` para gerenciamento dos peritos em memória.
 * Classe `NomeacaoPericialService` para gerenciamento das nomeações.
 * Classe `AtividadePericialService` para gerenciamento das atividades.
@@ -37,6 +41,10 @@ Alterações em desenvolvimento para a próxima versão da aplicação.
 
 ### Alterado
 
+* Services específicos refatorados para herdar o CRUD do
+  `BaseCrudService`, reduzindo duplicação de código.
+* Validações próprias de peritos, nomeações e atividades preservadas nos
+  respectivos Services.
 * Loaders integrados à camada de serviço.
 * Dados lidos dos arquivos-texto armazenados nos Maps.
 * Busca de peritos e nomeações realizada pelos respectivos Services.
