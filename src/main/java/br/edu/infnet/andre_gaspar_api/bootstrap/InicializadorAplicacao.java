@@ -1,4 +1,5 @@
 package br.edu.infnet.andre_gaspar_api.bootstrap;
+
 import br.edu.infnet.andre_gaspar_api.enums.StatusNomeacao;
 import br.edu.infnet.andre_gaspar_api.loader.AtividadeLoader;
 import br.edu.infnet.andre_gaspar_api.loader.NomeacaoLoader;
@@ -17,30 +18,38 @@ import java.util.List;
 @Component
 public class InicializadorAplicacao implements CommandLineRunner {
 
+    private final PeritoService peritoService;
+    private final NomeacaoPericialService nomeacaoService;
+    private final AtividadePericialService atividadeService;
+
+    public InicializadorAplicacao(
+            PeritoService peritoService,
+            NomeacaoPericialService nomeacaoService,
+            AtividadePericialService atividadeService
+    ) {
+        this.peritoService = peritoService;
+        this.nomeacaoService = nomeacaoService;
+        this.atividadeService = atividadeService;
+    }
+
     @Override
     public void run(String... args) throws Exception {
         PeritoLoader peritoLoader = new PeritoLoader();
         NomeacaoLoader nomeacaoLoader = new NomeacaoLoader();
         AtividadeLoader atividadeLoader = new AtividadeLoader();
 
-        PeritoService peritoService = new PeritoService();
-        NomeacaoPericialService nomeacaoService =
-                new NomeacaoPericialService();
-        AtividadePericialService atividadeService =
-                new AtividadePericialService();
-
         List<Perito> peritos = peritoLoader.carregar(peritoService);
 
         List<NomeacaoPericial> nomeacoes =
-                nomeacaoLoader.carregar(peritoService,nomeacaoService);
+                nomeacaoLoader.carregar(peritoService, nomeacaoService);
 
         List<AtividadePericial> atividades =
-                atividadeLoader.carregar(nomeacaoService,atividadeService);
+                atividadeLoader.carregar(nomeacaoService, atividadeService);
 
         System.out.println();
         System.out.println("========================================");
         System.out.println("  SISTEMA DE GESTAO DE PERICIAS");
-        System.out.println("  ETAPA 2 - ESTRUTURAS DE DADOS E SERVICOS");
+        System.out.println("  ETAPA 3 - API REST COM SPRING BOOT");
         System.out.println("========================================");
 
         for (Perito perito : peritos) {

@@ -8,15 +8,22 @@ exclusivamente à demonstração acadêmica.
 
 ## Etapa atual
 
-Etapa 2 — Estruturas de Dados e Camada de Serviço.
+Etapa 3 — API REST com Spring Boot.
 
-Nesta etapa, os dados fictícios são lidos dos arquivos-texto, relacionados
-pelos Loaders e armazenados em memória pelos Services, utilizando
-`Map<Long, Objeto>`. A aplicação também demonstra operações CRUD,
-Generics, lambdas e Streams.
+Nesta etapa, as funcionalidades da aplicação são disponibilizadas por
+endpoints REST organizados na arquitetura Controller → Service → Map.
+Os Controllers utilizam injeção de dependência por construtor e delegam
+as operações para a camada de serviço.
 
-Ainda não existem API REST, Controllers, persistência com JPA ou banco de
-dados. Esses recursos serão introduzidos nas etapas seguintes.
+A API possui operações HTTP de inclusão, alteração, exclusão, listagem e
+obtenção por identificador para peritos, nomeações e atividades periciais.
+As respostas utilizam códigos HTTP adequados e tratamento global de
+exceções.
+
+Os endpoints podem ser testados e visualizados por meio do Swagger UI.
+Os dados ainda permanecem temporariamente armazenados em memória com
+`Map`. A persistência com Spring Data JPA e banco de dados será
+introduzida somente na Etapa 4.
 
 ## Tecnologias
 
@@ -24,6 +31,11 @@ dados. Esses recursos serão introduzidos nas etapas seguintes.
 - Java Collections Framework
 - Lambdas e Streams
 - Spring Boot 4.1.1
+- Spring MVC
+- Springdoc OpenAPI
+- Swagger UI
+- Postman
+- MockMvc
 - Maven
 - JUnit
 - Git
@@ -146,26 +158,34 @@ Nesta etapa, os relacionamentos são representados por coleções Java em
 memória. As anotações JPA serão introduzidas somente na etapa de
 persistência.
 
-## Arquitetura da Etapa 2
+## Arquitetura da Etapa 3
 
-A aplicação utiliza armazenamento temporário em memória. Os Loaders leem
-os arquivos-texto e encaminham os objetos para a camada de serviço, que
-encapsula os Maps.
+A aplicação utiliza a separação de responsabilidades esperada para a
+Etapa 3. Os clientes HTTP comunicam-se com os Controllers, que delegam
+as operações aos Services. Os Services encapsulam o armazenamento
+temporário nos Maps.
 
 ```mermaid
 flowchart LR
-    A[Inicializador] --> L[Loaders]
-    L --> S[Services]
+    C[Cliente HTTP] --> R[Controllers REST]
+    R --> S[Services]
     S --> M[(Maps em memória)]
 ```
 
-O fluxo de carga é:
+Os Loaders continuam responsáveis pela carga inicial dos arquivos-texto.
+As mesmas instâncias dos Services são compartilhadas pelos Loaders e
+Controllers através da injeção de dependência do Spring.
 
-- `PeritoLoader` → `PeritoService` → `Map<Long, Perito>`;
-- `NomeacaoLoader` → `NomeacaoPericialService` →
-  `Map<Long, NomeacaoPericial>`;
-- `AtividadeLoader` → `AtividadePericialService` →
-  `Map<Long, AtividadePericial>`.
+O fluxo principal da API é:
+
+- cliente HTTP → `PeritoController` → `PeritoService` →
+  `Map<Long, Perito>`;
+- cliente HTTP → `NomeacaoPericialController` →
+  `NomeacaoPericialService` → `Map<Long, NomeacaoPericial>`;
+- cliente HTTP → `AtividadePericialController` →
+  `AtividadePericialService` → `Map<Long, AtividadePericial>`.
+
+Essa arquitetura ainda não utiliza Repository, JPA ou banco de dados.
 
 ## Camada de serviço
 
@@ -234,6 +254,58 @@ A camada de serviço utiliza exceções específicas:
 - `EntidadeNaoEncontradaException`: informa tentativas de recuperar,
   alterar ou excluir objetos inexistentes.
 
+## Endpoints REST
+
+A aplicação disponibiliza operações CRUD para os três principais
+contextos de negócio:
+
+| Método | Peritos | Nomeações | Atividades |
+| --- | --- | --- | --- |
+| GET | `/api/peritos` | `/api/nomeacoes` | `/api/atividades` |
+| GET por ID | `/api/peritos/{id}` | `/api/nomeacoes/{id}` | `/api/atividades/{id}` |
+| POST | `/api/peritos` | `/api/nomeacoes` | `/api/atividades` |
+| PUT | `/api/peritos/{id}` | `/api/nomeacoes/{id}` | `/api/atividades/{id}` |
+| DELETE | `/api/peritos/{id}` | `/api/nomeacoes/{id}` | `/api/atividades/{id}` |
+
+Os Controllers recebem as requisições HTTP e delegam as operações aos
+respectivos Services por meio de injeção de dependência por construtor.
+As regras e o armazenamento não ficam implementados nos Controllers.
+
+## Respostas HTTP
+
+A API utiliza os seguintes códigos:
+
+- `200 OK`: consulta ou alteração realizada com sucesso;
+- `201 Created`: objeto incluído com sucesso;
+- `204 No Content`: objeto excluído com sucesso;
+- `400 Bad Request`: identificador ou dados inválidos;
+- `404 Not Found`: objeto não encontrado;
+- `409 Conflict`: tentativa de incluir um identificador já existente.
+
+A classe `TratadorGlobalExcecoes`, anotada com
+`@RestControllerAdvice`, converte as exceções da aplicação em respostas
+HTTP padronizadas. O corpo dos erros é representado por `ErroApi`, contendo
+data e hora, status, erro, mensagem e caminho da requisição.
+
+## Documentação OpenAPI e Swagger
+
+Os principais endpoints são documentados com OpenAPI por meio do
+Springdoc. Os Controllers utilizam anotações como `@Tag`, `@Operation`,
+`@Parameter`, `@ApiResponse` e `@ApiResponses` para descrever os recursos,
+as operações, os parâmetros e os códigos de resposta.
+
+A configuração geral da documentação é definida pela classe
+`OpenApiConfig`. A interface Swagger UI permite visualizar a documentação,
+informar parâmetros, enviar requisições HTTP e conferir os dados retornados
+pela API diretamente no navegador.
+
+A documentação pode ser acessada em:
+
+- Swagger UI: `http://localhost:8080/swagger-ui/index.html`;
+- especificação OpenAPI: `http://localhost:8080/v3/api-docs`.
+
+O Swagger UI também foi utilizado como cliente HTTP interativo para
+demonstrar e testar os endpoints da aplicação.
 
 ## Tipos de atributos
 
@@ -273,19 +345,19 @@ Os Loaders criam os objetos, recuperam seus objetos relacionados pelos
 Services e estabelecem as associações. Em seguida, cada objeto é incluído
 no `Map` do respectivo Service.
 
-## Inicialização e teste do modelo
+## Inicialização e testes
 
 A classe `InicializadorAplicacao` implementa `CommandLineRunner`.
 
 Durante a inicialização, a aplicação:
 
-1. cria os três Services e seus Maps;
+1. recebe os três Services por injeção de dependência;
 2. lê os arquivos-texto;
 3. cria os objetos;
 4. associa as nomeações ao perito;
 5. associa as atividades às nomeações;
 6. inclui os objetos nos respectivos Services;
-7. recupera os dados armazenados em memória;
+7. disponibiliza os mesmos dados aos Controllers;
 8. executa consultas com Streams;
 9. apresenta os objetos e o resumo no console.
 
@@ -300,30 +372,65 @@ No Linux ou WSL:
 Resultado esperado:
 
 ```text
-Tests run: 6, Failures: 0, Errors: 0
+Tests run: 10, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
 
 Os testes validam:
 
 - inicialização do contexto Spring Boot;
-- operações CRUD do serviço de nomeações;
-- tratamento de duplicidade e entidade inexistente;
+- operações CRUD da camada de serviço;
+- carga dos três arquivos-texto;
+- relacionamentos um-para-muitos;
 - consultas com Streams;
-- leitura dos três arquivos-texto;
-- armazenamento nos Services;
-- relacionamentos um-para-muitos.
+- endpoints dos três contextos de negócio;
+- ciclo REST de inclusão, alteração, consulta e exclusão;
+- códigos HTTP de sucesso e de erro;
+- estrutura padronizada das respostas de erro;
+- geração e conteúdo da documentação OpenAPI.
+
+### Testes com Postman
+
+Os endpoints também foram testados por meio de uma coleção do Postman,
+organizada por recursos e cenários de erro:
+
+- `Peritos`: listagem e obtenção por identificador;
+- `Nomeações`: listagem dos registros;
+- `Atividades`: listagem, inclusão, alteração e exclusão;
+- `Erros`: validação dos retornos `400`, `404` e `409`.
+
+A execução completa da coleção contempla dez requisições e 29 testes
+automatizados, com validação dos códigos HTTP, do formato JSON e do
+conteúdo das respostas.
+
+A coleção pode ser importada no Postman por meio do arquivo
+`postman/Andre-Gaspar-API-Etapa-3.postman_collection.json`.
+
+Para executá-la:
+
+1. iniciar a aplicação com `./mvnw spring-boot:run`;
+2. importar a coleção no Postman;
+3. confirmar que a variável `baseUrl` contém
+   `http://localhost:8080`;
+4. executar a coleção pelo Collection Runner com uma iteração.
 
 ## Como executar
 
-Para executar como aplicação de console:
+Para iniciar a API REST:
 
 ```bash
-./mvnw spring-boot:run \
-  -Dspring-boot.run.arguments=--spring.main.web-application-type=none
+./mvnw spring-boot:run
 ```
 
-Resumo esperado:
+Com a aplicação em execução, podem ser acessados:
+
+- Swagger UI: `http://localhost:8080/swagger-ui/index.html`;
+- OpenAPI JSON: `http://localhost:8080/v3/api-docs`;
+- peritos: `http://localhost:8080/api/peritos`;
+- nomeações: `http://localhost:8080/api/nomeacoes`;
+- atividades: `http://localhost:8080/api/atividades`.
+
+Resumo esperado da carga inicial:
 
 ```text
 Peritos carregados: 1
@@ -331,13 +438,10 @@ Nomeacoes carregadas: 2
 Atividades carregadas: 4
 ```
 
-## Limites da Etapa 2
+## Limites da Etapa 3
 
 Nesta etapa, ainda não foram implementados:
 
-- API REST;
-- Controllers;
-- DTOs;
 - persistência com JPA;
 - Repositories;
 - banco de dados.
@@ -348,8 +452,8 @@ Spring Data JPA na Etapa 4.
 ## Evolução planejada
 
 - Etapa 1: orientação a objetos e arquivos-texto — concluída;
-- Etapa 2: Collections, Map e camada de serviço — etapa atual;
-- Etapa 3: API REST com Spring Boot;
+- Etapa 2: Collections, Map e camada de serviço — concluída;
+- Etapa 3: API REST com Spring Boot — etapa atual;
 - Etapa 4: persistência com Spring Data JPA.
 
 ## Marco da etapa
@@ -357,12 +461,13 @@ Spring Data JPA na Etapa 4.
 A conclusão desta versão será registrada com a tag Git:
 
 ```text
-etapa-2
+etapa-3
 ```
 
 ## Uso de inteligência artificial
 
-Ferramentas de inteligência artificial foram utilizadas como apoio ao
-planejamento, esclarecimento de dúvidas, configuração, documentação e
-revisão da qualidade. A implementação foi acompanhada, executada e
-compreendida pelo aluno, responsável pela validação do projeto.
+O ChatGPT, da OpenAI, foi utilizado como ferramenta de apoio ao
+planejamento, ao esclarecimento de dúvidas, à configuração do framework,
+à depuração, à documentação e à revisão da qualidade do código. A
+modelagem, a implementação, a execução e a validação da aplicação foram
+acompanhadas e compreendidas pelo aluno, responsável pelo resultado final.

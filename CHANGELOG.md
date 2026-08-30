@@ -8,6 +8,59 @@ O formato é baseado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.
 
 Alterações em desenvolvimento para a próxima versão da aplicação.
 
+## [0.3.0] — 2026-08-30
+
+**Marco acadêmico:** `etapa-3`
+
+**Competência:** API REST com Spring Boot
+
+### Adicionado
+
+* Controllers REST para peritos, nomeações e atividades periciais.
+* Endpoints `GET`, `POST`, `PUT` e `DELETE` para os três contextos de
+  negócio.
+* Respostas HTTP com os códigos `200`, `201`, `204`, `400`, `404` e `409`.
+* Classe `TratadorGlobalExcecoes` para tratamento centralizado das
+  exceções da API.
+* Estrutura padronizada de erros por meio do record `ErroApi`.
+* Documentação OpenAPI gerada com Springdoc.
+* Interface Swagger UI para documentação e testes interativos da API.
+* Classe `OpenApiConfig` com título, descrição e versão da documentação.
+* Anotações OpenAPI nos Controllers para descrever operações, parâmetros
+  e respostas.
+* Testes de integração dos endpoints REST com MockMvc.
+* Teste da geração e do conteúdo da documentação OpenAPI.
+* Coleção do Postman com requisições organizadas para demonstração e
+    teste dos endpoints REST.
+* Testes automatizados no Postman para validar códigos HTTP, formato JSON
+  e conteúdo das respostas.
+
+### Alterado
+
+* Services registrados como componentes do Spring com `@Service`.
+* Inicializador refatorado para receber os Services por injeção de
+  dependência pelo construtor.
+* Mesmas instâncias dos Services compartilhadas entre Loaders e
+  Controllers.
+* Aplicação evoluída da arquitetura `Service → Map` para
+  `Cliente HTTP → Controller → Service → Map`.
+* Versão do projeto atualizada para `0.3.0`.
+* Documentação atualizada para a Etapa 3.
+
+### Validado
+
+* Operações REST de listagem, obtenção por identificador, inclusão,
+  alteração e exclusão.
+* Endpoints dos três contextos de negócio.
+* Retornos de sucesso `200 OK`, `201 Created` e `204 No Content`.
+* Retornos de erro `400 Bad Request`, `404 Not Found` e `409 Conflict`.
+* Estrutura padronizada das respostas de erro.
+* Disponibilização da documentação no Swagger UI e em `/v3/api-docs`.
+* Execução de dez testes com zero falhas e zero erros.
+* Compilação finalizada com `BUILD SUCCESS`.
+* Execução da coleção do Postman com dez requisições, 29 testes aprovados
+    e zero erros.
+
 ## [0.2.0] — 2026-08-28
 
 **Marco acadêmico:** `etapa-2`
@@ -132,6 +185,7 @@ Alterações em desenvolvimento para a próxima versão da aplicação.
 * Execução dos testes com zero falhas e zero erros.
 * Compilação finalizada com `BUILD SUCCESS`.
 
-[Não publicado]: https://github.com/andregasparinfnet/andre-gaspar-api/compare/etapa-2...HEAD
+[Não publicado]: https://github.com/andregasparinfnet/andre-gaspar-api/compare/etapa-3...HEAD
+[0.3.0]: https://github.com/andregasparinfnet/andre-gaspar-api/tree/etapa-3
 [0.2.0]: https://github.com/andregasparinfnet/andre-gaspar-api/tree/etapa-2
 [0.1.0]: https://github.com/andregasparinfnet/andre-gaspar-api/tree/etapa-1

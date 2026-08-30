@@ -4,10 +4,12 @@ import br.edu.infnet.andre_gaspar_api.enums.StatusNomeacao;
 import br.edu.infnet.andre_gaspar_api.exception.DadosInvalidosException;
 import br.edu.infnet.andre_gaspar_api.exception.EntidadeNaoEncontradaException;
 import br.edu.infnet.andre_gaspar_api.model.NomeacaoPericial;
+import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
 
+@Service
 public class NomeacaoPericialService
         extends BaseCrudService<NomeacaoPericial> {
     public List<NomeacaoPericial> listarPorStatus(
