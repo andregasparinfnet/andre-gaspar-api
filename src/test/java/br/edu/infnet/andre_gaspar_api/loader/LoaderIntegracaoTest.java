@@ -7,82 +7,82 @@ import br.edu.infnet.andre_gaspar_api.service.AtividadePericialService;
 import br.edu.infnet.andre_gaspar_api.service.NomeacaoPericialService;
 import br.edu.infnet.andre_gaspar_api.service.PeritoService;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@SpringBootTest
+@Transactional
 class LoaderIntegracaoTest {
 
+    @Autowired
+    private PeritoService peritoService;
+
+    @Autowired
+    private NomeacaoPericialService nomeacaoService;
+
+    @Autowired
+    private AtividadePericialService atividadeService;
+
     @Test
-    void deveCarregarArquivosNosServicosEPreservarRelacionamentos()
-            throws IOException {
-
-        PeritoService peritoService = new PeritoService();
-        NomeacaoPericialService nomeacaoService =
-                new NomeacaoPericialService();
-        AtividadePericialService atividadeService =
-                new AtividadePericialService();
-
-        PeritoLoader peritoLoader = new PeritoLoader();
-        NomeacaoLoader nomeacaoLoader = new NomeacaoLoader();
-        AtividadeLoader atividadeLoader = new AtividadeLoader();
-
+    void deveCarregarArquivosNoBancoEPreservarRelacionamentos() {
         List<Perito> peritos =
-                peritoLoader.carregar(peritoService);
+                peritoService.listarTodos();
 
         List<NomeacaoPericial> nomeacoes =
-                nomeacaoLoader.carregar(
-                        peritoService,
-                        nomeacaoService
-                );
+                nomeacaoService.listarTodos();
 
         List<AtividadePericial> atividades =
-                atividadeLoader.carregar(
-                        nomeacaoService,
-                        atividadeService
-                );
+                atividadeService.listarTodos();
 
         assertEquals(1, peritos.size());
         assertEquals(2, nomeacoes.size());
         assertEquals(4, atividades.size());
 
-        assertEquals(1, peritoService.listarTodos().size());
-        assertEquals(2, nomeacaoService.listarTodos().size());
-        assertEquals(4, atividadeService.listarTodos().size());
+        Perito perito = peritos.getFirst();
 
-        Perito perito = peritoService.obterPorId(1L);
-
+        assertNotNull(perito.getId());
         assertEquals(2, perito.getNomeacoes().size());
-        assertSame(
-                nomeacaoService.obterPorId(1L),
-                perito.getNomeacoes().get(0)
+
+        NomeacaoPericial primeiraNomeacao =
+                nomeacaoService.obterPorNumeroProcesso(
+                        "0000001-00.2026.8.00.0001"
+                );
+
+        NomeacaoPericial segundaNomeacao =
+                nomeacaoService.obterPorNumeroProcesso(
+                        "0000002-00.2026.8.00.0002"
+                );
+
+        assertNotNull(primeiraNomeacao.getPerito());
+        assertEquals(
+                perito.getId(),
+                primeiraNomeacao.getPerito().getId()
         );
 
         assertEquals(
                 3,
-                nomeacaoService
-                        .obterPorId(1L)
-                        .getAtividades()
-                        .size()
+                primeiraNomeacao.getAtividades().size()
         );
 
         assertEquals(
                 1,
-                nomeacaoService
-                        .obterPorId(2L)
-                        .getAtividades()
-                        .size()
+                segundaNomeacao.getAtividades().size()
         );
 
-        assertSame(
-                atividadeService.obterPorId(1L),
-                nomeacaoService
-                        .obterPorId(1L)
-                        .getAtividades()
-                        .get(0)
+        AtividadePericial primeiraAtividade =
+                primeiraNomeacao.getAtividades().getFirst();
+
+        assertNotNull(primeiraAtividade.getNomeacao());
+
+        assertEquals(
+                primeiraNomeacao.getId(),
+                primeiraAtividade.getNomeacao().getId()
         );
     }
 }

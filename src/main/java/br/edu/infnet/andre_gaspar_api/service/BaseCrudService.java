@@ -1,80 +1,102 @@
 package br.edu.infnet.andre_gaspar_api.service;
 
 import br.edu.infnet.andre_gaspar_api.exception.DadosInvalidosException;
-import br.edu.infnet.andre_gaspar_api.exception.EntidadeJaExistenteException;
 import br.edu.infnet.andre_gaspar_api.exception.EntidadeNaoEncontradaException;
 import br.edu.infnet.andre_gaspar_api.model.Identificavel;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
+@Transactional
 public abstract class BaseCrudService<T extends Identificavel>
         implements CrudService<T, Long> {
 
-    private final Map<Long, T> dados = new LinkedHashMap<>();
+    private final JpaRepository<T, Long> repository;
+
+    protected BaseCrudService(
+            JpaRepository<T, Long> repository
+    ) {
+        this.repository = repository;
+    }
 
     @Override
     public T incluir(T objeto) {
         validarObjeto(objeto);
 
-        if (dados.containsKey(objeto.getId())) {
-            throw new EntidadeJaExistenteException(
-                    "Já existe uma entidade com o ID " + objeto.getId()
+        if (objeto.getId() != null) {
+            throw new DadosInvalidosException(
+                    "O ID não deve ser informado na inclusão"
             );
         }
 
-        dados.put(objeto.getId(), objeto);
-        return objeto;
+        return repository.save(objeto);
     }
 
     @Override
     public T alterar(T objeto) {
         validarObjeto(objeto);
+        validarId(objeto.getId());
 
-        if (!dados.containsKey(objeto.getId())) {
+        if (!repository.existsById(objeto.getId())) {
             throw new EntidadeNaoEncontradaException(
                     "Entidade não encontrada: " + objeto.getId()
             );
         }
 
-        dados.put(objeto.getId(), objeto);
-        return objeto;
+        return repository.save(objeto);
     }
 
     @Override
     public void excluir(Long id) {
         validarId(id);
 
-        if (dados.remove(id) == null) {
+        if (!repository.existsById(id)) {
             throw new EntidadeNaoEncontradaException(
                     "Entidade não encontrada: " + id
             );
         }
+
+        repository.deleteById(id);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public T obterPorId(Long id) {
         validarId(id);
 
-        T objeto = dados.get(id);
-
-        if (objeto == null) {
-            throw new EntidadeNaoEncontradaException(
-                    "Entidade não encontrada: " + id
-            );
-        }
-
-        return objeto;
+        return repository.findById(id)
+                .orElseThrow(() ->
+                        new EntidadeNaoEncontradaException(
+                                "Entidade não encontrada: " + id
+                        )
+                );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<T> listarTodos() {
-        return new ArrayList<>(dados.values());
+        return repository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public long contar() {
+        return repository.count();
+    }
+
+    protected JpaRepository<T, Long> getRepository() {
+        return repository;
     }
 
     protected void validarDadosEspecificos(T objeto) {
+    }
+
+    protected void validarId(Long id) {
+        if (id == null || id <= 0) {
+            throw new DadosInvalidosException(
+                    "O ID da entidade deve ser positivo"
+            );
+        }
     }
 
     private void validarObjeto(T objeto) {
@@ -84,15 +106,6 @@ public abstract class BaseCrudService<T extends Identificavel>
             );
         }
 
-        validarId(objeto.getId());
         validarDadosEspecificos(objeto);
-    }
-
-    private void validarId(Long id) {
-        if (id == null || id <= 0) {
-            throw new DadosInvalidosException(
-                    "O ID da entidade deve ser positivo"
-            );
-        }
     }
 }

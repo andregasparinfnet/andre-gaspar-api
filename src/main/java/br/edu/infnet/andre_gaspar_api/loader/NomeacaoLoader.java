@@ -1,11 +1,11 @@
 package br.edu.infnet.andre_gaspar_api.loader;
 
 import br.edu.infnet.andre_gaspar_api.enums.StatusNomeacao;
+import br.edu.infnet.andre_gaspar_api.exception.DadosInvalidosException;
 import br.edu.infnet.andre_gaspar_api.model.HonorariosPericiais;
 import br.edu.infnet.andre_gaspar_api.model.NomeacaoPericial;
 import br.edu.infnet.andre_gaspar_api.model.Perito;
 import br.edu.infnet.andre_gaspar_api.service.NomeacaoPericialService;
-import br.edu.infnet.andre_gaspar_api.service.PeritoService;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.BufferedReader;
@@ -14,12 +14,17 @@ import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class NomeacaoLoader {
 
+    private final Map<Long, NomeacaoPericial>
+            nomeacoesPorIdOrigem = new HashMap<>();
+
     public List<NomeacaoPericial> carregar(
-            PeritoService peritoService,
+            PeritoLoader peritoLoader,
             NomeacaoPericialService nomeacaoService
     ) throws IOException {
 
@@ -43,11 +48,17 @@ public class NomeacaoLoader {
 
                 String[] campos = linha.split(";", -1);
 
-                Long id = Long.valueOf(campos[0]);
-                Long peritoId = Long.valueOf(campos[1]);
+                Long idOrigem = Long.valueOf(campos[0]);
+                Long peritoIdOrigem =
+                        Long.valueOf(campos[1]);
+
                 String numeroProcesso = campos[2];
-                LocalDate dataNomeacao = LocalDate.parse(campos[3]);
-                int prazoEmDias = Integer.parseInt(campos[4]);
+
+                LocalDate dataNomeacao =
+                        LocalDate.parse(campos[3]);
+
+                int prazoEmDias =
+                        Integer.parseInt(campos[4]);
 
                 StatusNomeacao status =
                         StatusNomeacao.valueOf(campos[5]);
@@ -73,13 +84,16 @@ public class NomeacaoLoader {
                     honorarios.registrarDeposito();
                 }
 
-                if (valorRecebido.compareTo(BigDecimal.ZERO) > 0) {
-                    honorarios.registrarRecebimento(valorRecebido);
+                if (valorRecebido.compareTo(
+                        BigDecimal.ZERO
+                ) > 0) {
+                    honorarios.registrarRecebimento(
+                            valorRecebido
+                    );
                 }
 
                 NomeacaoPericial nomeacao =
                         new NomeacaoPericial(
-                                id,
                                 numeroProcesso,
                                 dataNomeacao,
                                 prazoEmDias,
@@ -88,13 +102,43 @@ public class NomeacaoLoader {
 
                 nomeacao.alterarStatus(status);
 
-                Perito perito = peritoService.obterPorId(peritoId);
-                perito.adicionarNomeacao(nomeacao);
+                Perito perito =
+                        peritoLoader.obterPorIdOrigem(
+                                peritoIdOrigem
+                        );
 
-                nomeacaoService.incluir(nomeacao);
+                nomeacao.associarPerito(perito);
+
+                NomeacaoPericial nomeacaoPersistida =
+                        nomeacaoService.incluir(nomeacao);
+
+                perito.adicionarNomeacao(
+                        nomeacaoPersistida
+                );
+
+                nomeacoesPorIdOrigem.put(
+                        idOrigem,
+                        nomeacaoPersistida
+                );
             }
         }
 
         return nomeacaoService.listarTodos();
+    }
+
+    public NomeacaoPericial obterPorIdOrigem(
+            Long idOrigem
+    ) {
+        NomeacaoPericial nomeacao =
+                nomeacoesPorIdOrigem.get(idOrigem);
+
+        if (nomeacao == null) {
+            throw new DadosInvalidosException(
+                    "Nomeação não encontrada no arquivo para o ID "
+                            + idOrigem
+            );
+        }
+
+        return nomeacao;
     }
 }

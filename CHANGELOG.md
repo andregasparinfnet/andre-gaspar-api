@@ -8,6 +8,67 @@ O formato é baseado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.
 
 Alterações em desenvolvimento para a próxima versão da aplicação.
 
+## [0.4.0] — 2026-08-31
+
+**Marco acadêmico:** `etapa-4`
+
+**Competência:** APIs REST e Persistência com Spring Data
+
+### Adicionado
+
+* Persistência das entidades com Spring Data JPA e Hibernate.
+* `PeritoRepository`, `NomeacaoPericialRepository` e
+  `AtividadePericialRepository`, estendendo `JpaRepository`.
+* Banco de dados H2 persistido em arquivo para execução da aplicação.
+* Banco H2 em memória separado para execução dos testes automatizados.
+* Mapeamentos JPA com `@Entity`, `@MappedSuperclass`, `@Embeddable`,
+  `@Embedded`, `@OneToMany` e `@ManyToOne`.
+* Identificadores gerados automaticamente com `GenerationType.IDENTITY`.
+* Consultas derivadas do Spring Data para filtragem, busca e ordenação.
+* Bean Validation nas entidades e corpos das requisições REST.
+* Integração externa com a BrasilAPI utilizando Spring Cloud OpenFeign.
+* Cliente `BrasilApiClient`, DTO `FeriadoNacional`, Service e Controller
+  para consulta de feriados nacionais.
+* Endpoint `GET /api/feriados/{ano}`.
+* Testes automatizados da integração e das regras da Etapa 4.
+* Collection Postman atualizada para demonstração da versão final.
+
+### Alterado
+
+* Arquitetura evoluída de
+  `Cliente HTTP → Controller → Service → Map`
+  para
+  `Cliente HTTP → Controller → Service → Repository → Banco de Dados`.
+* `BaseCrudService` refatorado para utilizar `JpaRepository` em vez de Map.
+* Services refatorados para injeção dos respectivos Repositories.
+* Loaders adaptados para persistir os dados iniciais através dos Services.
+* Inicializador adaptado para evitar nova carga quando o banco já contém
+  registros.
+* Modelos de domínio adaptados para persistência JPA.
+* Relacionamentos entre peritos, nomeações e atividades persistidos no banco.
+* Serialização JSON configurada para evitar referências circulares.
+* Tratamento global de erros ampliado para respostas HTTP padronizadas.
+* Documentação OpenAPI atualizada para a versão `0.4.0`.
+* Versão Maven atualizada para `0.4.0-SNAPSHOT`.
+* README atualizado para a Etapa 4.
+
+### Validado
+
+* Persistência de peritos, nomeações e atividades no banco H2.
+* Manutenção dos dados após reinicialização da aplicação.
+* CRUD REST utilizando Spring Data JPA.
+* Consulta de nomeações por status.
+* Ordenação de nomeações por prazo.
+* Busca de nomeação pelo número do processo.
+* Filtragem de atividades por situação e ordenação por prazo.
+* Restrições de unicidade de e-mail e número processual.
+* Bean Validation e respostas `400 Bad Request`.
+* Respostas `404 Not Found` e `409 Conflict`.
+* Integração externa com BrasilAPI por OpenFeign.
+* Documentação Swagger UI e contrato `/v3/api-docs`.
+* Execução de 17 testes com zero falhas e zero erros.
+* Compilação finalizada com `BUILD SUCCESS`.
+
 ## [0.3.0] — 2026-08-30
 
 **Marco acadêmico:** `etapa-3`
@@ -185,7 +246,8 @@ Alterações em desenvolvimento para a próxima versão da aplicação.
 * Execução dos testes com zero falhas e zero erros.
 * Compilação finalizada com `BUILD SUCCESS`.
 
-[Não publicado]: https://github.com/andregasparinfnet/andre-gaspar-api/compare/etapa-3...HEAD
+[Não publicado]: https://github.com/andregasparinfnet/andre-gaspar-api/compare/etapa-4...HEAD
+[0.4.0]: https://github.com/andregasparinfnet/andre-gaspar-api/tree/etapa-4
 [0.3.0]: https://github.com/andregasparinfnet/andre-gaspar-api/tree/etapa-3
 [0.2.0]: https://github.com/andregasparinfnet/andre-gaspar-api/tree/etapa-2
 [0.1.0]: https://github.com/andregasparinfnet/andre-gaspar-api/tree/etapa-1

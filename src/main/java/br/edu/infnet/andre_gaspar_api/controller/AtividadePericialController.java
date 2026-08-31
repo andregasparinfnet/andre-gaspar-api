@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -47,6 +49,31 @@ public class AtividadePericialController {
         return ResponseEntity.ok(atividadeService.listarTodos());
     }
 
+    @GetMapping("/filtro")
+    @Operation(
+            summary = "Filtra atividades pela situação de conclusão",
+            description = "Retorna as atividades ordenadas pelo prazo"
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Atividades filtradas com sucesso"
+    )
+    public ResponseEntity<List<AtividadePericial>>
+    listarPorConclusao(
+            @Parameter(
+                    description = "Indica se a atividade está concluída",
+                    required = true
+            )
+            @RequestParam boolean concluida
+    ) {
+        return ResponseEntity.ok(
+                atividadeService
+                        .listarPorConclusaoOrdenadasPorPrazo(
+                                concluida
+                        )
+        );
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Obtém uma atividade pelo identificador")
     @ApiResponses({
@@ -71,7 +98,9 @@ public class AtividadePericialController {
     }
 
     @PostMapping
-    @Operation(summary = "Inclui uma nova atividade pericial")
+    @Operation(
+            summary = "Inclui uma atividade em uma nomeação pericial"
+    )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "201",
@@ -79,18 +108,26 @@ public class AtividadePericialController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Dados da atividade inválidos"
+                    description = "Dados ou identificador inválidos"
             ),
             @ApiResponse(
-                    responseCode = "409",
-                    description = "Já existe uma atividade com o identificador"
+                    responseCode = "404",
+                    description = "Nomeação não encontrada"
             )
     })
     public ResponseEntity<AtividadePericial> incluir(
-            @RequestBody AtividadePericial atividade
+            @Parameter(
+                    description = "Identificador da nomeação",
+                    required = true
+            )
+            @RequestParam Long nomeacaoId,
+            @Valid @RequestBody AtividadePericial atividade
     ) {
         AtividadePericial atividadeIncluida =
-                atividadeService.incluir(atividade);
+                atividadeService.incluirNaNomeacao(
+                        nomeacaoId,
+                        atividade
+                );
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -116,7 +153,7 @@ public class AtividadePericialController {
     public ResponseEntity<AtividadePericial> alterar(
             @Parameter(description = "Identificador da atividade")
             @PathVariable Long id,
-            @RequestBody AtividadePericial atividade
+            @Valid @RequestBody AtividadePericial atividade
     ) {
         if (!id.equals(atividade.getId())) {
             throw new DadosInvalidosException(

@@ -13,12 +13,12 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("André Gaspar API")
-                        .version("0.3.0")
+                        .version("0.4.0")
                         .description(
                                 "API REST acadêmica para gerenciamento "
                                         + "de nomeações e atividades periciais. "
-                                        + "Na Etapa 3, os dados permanecem "
-                                        + "armazenados em memória com Map."
+                                        + "Na Etapa 4, os dados são persistidos "
+                                        + "em banco H2 com Spring Data JPA."
                         )
                 );
     }

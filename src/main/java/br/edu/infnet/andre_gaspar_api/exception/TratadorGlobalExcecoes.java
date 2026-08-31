@@ -3,8 +3,11 @@ package br.edu.infnet.andre_gaspar_api.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 
@@ -18,7 +21,27 @@ public class TratadorGlobalExcecoes {
     ) {
         return criarResposta(
                 HttpStatus.BAD_REQUEST,
-                exception,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErroApi> tratarValidacao(
+            MethodArgumentNotValidException exception,
+            HttpServletRequest request
+    ) {
+        String mensagem = exception
+                .getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(FieldError::getDefaultMessage)
+                .findFirst()
+                .orElse("Dados inválidos");
+
+        return criarResposta(
+                HttpStatus.BAD_REQUEST,
+                mensagem,
                 request
         );
     }
@@ -30,7 +53,7 @@ public class TratadorGlobalExcecoes {
     ) {
         return criarResposta(
                 HttpStatus.NOT_FOUND,
-                exception,
+                exception.getMessage(),
                 request
         );
     }
@@ -42,21 +65,41 @@ public class TratadorGlobalExcecoes {
     ) {
         return criarResposta(
                 HttpStatus.CONFLICT,
-                exception,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErroApi> tratarResponseStatusException(
+            ResponseStatusException exception,
+            HttpServletRequest request
+    ) {
+        HttpStatus status =
+                HttpStatus.valueOf(exception.getStatusCode().value());
+
+        String mensagem =
+                exception.getReason() != null
+                        ? exception.getReason()
+                        : status.getReasonPhrase();
+
+        return criarResposta(
+                status,
+                mensagem,
                 request
         );
     }
 
     private ResponseEntity<ErroApi> criarResposta(
             HttpStatus status,
-            RuntimeException exception,
+            String mensagem,
             HttpServletRequest request
     ) {
         ErroApi erro = new ErroApi(
                 LocalDateTime.now(),
                 status.value(),
                 status.getReasonPhrase(),
-                exception.getMessage(),
+                mensagem,
                 request.getRequestURI()
         );
 

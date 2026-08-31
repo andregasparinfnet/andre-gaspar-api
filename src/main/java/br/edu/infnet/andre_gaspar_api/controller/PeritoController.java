@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -85,7 +86,7 @@ public class PeritoController {
             )
     })
     public ResponseEntity<Perito> incluir(
-            @RequestBody Perito perito
+            @Valid @RequestBody Perito perito
     ) {
         Perito peritoIncluido = peritoService.incluir(perito);
 
@@ -113,7 +114,7 @@ public class PeritoController {
     public ResponseEntity<Perito> alterar(
             @Parameter(description = "Identificador do perito")
             @PathVariable Long id,
-            @RequestBody Perito perito
+            @Valid @RequestBody Perito perito
     ) {
         if (!id.equals(perito.getId())) {
             throw new DadosInvalidosException(

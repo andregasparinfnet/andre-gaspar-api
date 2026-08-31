@@ -12,6 +12,7 @@ import br.edu.infnet.andre_gaspar_api.service.NomeacaoPericialService;
 import br.edu.infnet.andre_gaspar_api.service.PeritoService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -33,23 +34,20 @@ public class InicializadorAplicacao implements CommandLineRunner {
     }
 
     @Override
+    @Transactional
     public void run(String... args) throws Exception {
-        PeritoLoader peritoLoader = new PeritoLoader();
-        NomeacaoLoader nomeacaoLoader = new NomeacaoLoader();
-        AtividadeLoader atividadeLoader = new AtividadeLoader();
+        carregarDadosIniciaisSeNecessario();
 
-        List<Perito> peritos = peritoLoader.carregar(peritoService);
-
+        List<Perito> peritos = peritoService.listarTodos();
         List<NomeacaoPericial> nomeacoes =
-                nomeacaoLoader.carregar(peritoService, nomeacaoService);
-
+                nomeacaoService.listarTodos();
         List<AtividadePericial> atividades =
-                atividadeLoader.carregar(nomeacaoService, atividadeService);
+                atividadeService.listarTodos();
 
         System.out.println();
         System.out.println("========================================");
         System.out.println("  SISTEMA DE GESTAO DE PERICIAS");
-        System.out.println("  ETAPA 3 - API REST COM SPRING BOOT");
+        System.out.println("  ETAPA 4 - SPRING DATA JPA");
         System.out.println("========================================");
 
         for (Perito perito : peritos) {
@@ -66,7 +64,6 @@ public class InicializadorAplicacao implements CommandLineRunner {
 
                 for (AtividadePericial atividade
                         : nomeacao.getAtividades()) {
-
                     System.out.println("    " + atividade);
                 }
             }
@@ -74,15 +71,20 @@ public class InicializadorAplicacao implements CommandLineRunner {
 
         System.out.println();
         System.out.println("------------- RESUMO -------------------");
-        System.out.println("Peritos carregados: " + peritos.size());
         System.out.println(
-                "Nomeacoes carregadas: " + nomeacoes.size()
+                "Peritos persistidos: " + peritos.size()
         );
         System.out.println(
-                "Atividades carregadas: " + atividades.size()
+                "Nomeacoes persistidas: " + nomeacoes.size()
         );
+        System.out.println(
+                "Atividades persistidas: " + atividades.size()
+        );
+
         System.out.println();
-        System.out.println("------- CONSULTAS COM STREAMS -----------");
+        System.out.println(
+                "------- CONSULTAS SPRING DATA -----------"
+        );
 
         System.out.println(
                 "Nomeacoes recebidas: "
@@ -102,7 +104,8 @@ public class InicializadorAplicacao implements CommandLineRunner {
                 : nomeacaoService.listarOrdenadasPorPrazo()) {
             System.out.println(
                     "  " + nomeacao.getDataLimite()
-                            + " - " + nomeacao.getNumeroProcesso()
+                            + " - "
+                            + nomeacao.getNumeroProcesso()
             );
         }
 
@@ -115,7 +118,43 @@ public class InicializadorAplicacao implements CommandLineRunner {
                 "Busca por numero: "
                         + nomeacaoEncontrada.getNumeroProcesso()
         );
+
         System.out.println("========================================");
         System.out.println();
+    }
+
+    private void carregarDadosIniciaisSeNecessario()
+            throws Exception {
+
+        if (peritoService.contar() > 0
+                || nomeacaoService.contar() > 0
+                || atividadeService.contar() > 0) {
+
+            System.out.println(
+                    "Banco de dados já possui registros. "
+                            + "Carga inicial não executada."
+            );
+            return;
+        }
+
+        PeritoLoader peritoLoader = new PeritoLoader();
+        NomeacaoLoader nomeacaoLoader = new NomeacaoLoader();
+        AtividadeLoader atividadeLoader = new AtividadeLoader();
+
+        peritoLoader.carregar(peritoService);
+
+        nomeacaoLoader.carregar(
+                peritoLoader,
+                nomeacaoService
+        );
+
+        atividadeLoader.carregar(
+                nomeacaoLoader,
+                atividadeService
+        );
+
+        System.out.println(
+                "Dados iniciais persistidos no banco de dados."
+        );
     }
 }

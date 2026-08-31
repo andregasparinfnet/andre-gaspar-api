@@ -5,139 +5,220 @@ import br.edu.infnet.andre_gaspar_api.exception.EntidadeJaExistenteException;
 import br.edu.infnet.andre_gaspar_api.exception.EntidadeNaoEncontradaException;
 import br.edu.infnet.andre_gaspar_api.model.HonorariosPericiais;
 import br.edu.infnet.andre_gaspar_api.model.NomeacaoPericial;
+import br.edu.infnet.andre_gaspar_api.model.Perito;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@SpringBootTest
+@Transactional
 class NomeacaoPericialServiceTest {
+
+    @Autowired
+    private NomeacaoPericialService service;
+
+    @Autowired
+    private PeritoService peritoService;
 
     @Test
     void deveIncluirEObterNomeacaoPorId() {
-        NomeacaoPericialService service =
-                new NomeacaoPericialService();
-
         NomeacaoPericial nomeacao = criarNomeacao(
-                1L,
-                "0000001-00.2026.8.00.0001",
-                LocalDate.of(2026, 8, 20),
+                "PROCESSO-TESTE-INCLUSAO",
+                LocalDate.of(2026, 10, 20),
                 StatusNomeacao.RECEBIDA
         );
 
-        service.incluir(nomeacao);
+        NomeacaoPericial incluída = service.incluir(nomeacao);
 
-        assertSame(nomeacao, service.obterPorId(1L));
-        assertEquals(1, service.listarTodos().size());
+        assertNotNull(incluída.getId());
+
+        NomeacaoPericial encontrada =
+                service.obterPorId(incluída.getId());
+
+        assertEquals(
+                "PROCESSO-TESTE-INCLUSAO",
+                encontrada.getNumeroProcesso()
+        );
     }
 
     @Test
     void deveAlterarEExcluirNomeacao() {
-        NomeacaoPericialService service =
-                new NomeacaoPericialService();
-
-        NomeacaoPericial original = criarNomeacao(
-                1L,
-                "PROCESSO-ORIGINAL",
-                LocalDate.of(2026, 8, 20),
-                StatusNomeacao.RECEBIDA
+        NomeacaoPericial original = service.incluir(
+                criarNomeacao(
+                        "PROCESSO-TESTE-ALTERACAO",
+                        LocalDate.of(2026, 10, 21),
+                        StatusNomeacao.RECEBIDA
+                )
         );
 
-        NomeacaoPericial alterada = criarNomeacao(
-                1L,
-                "PROCESSO-ALTERADO",
-                LocalDate.of(2026, 8, 21),
+        NomeacaoPericial alterada = criarNomeacaoComId(
+                original.getId(),
+                "PROCESSO-TESTE-ALTERADO",
+                LocalDate.of(2026, 10, 22),
                 StatusNomeacao.ACEITA
         );
 
-        service.incluir(original);
-        service.alterar(alterada);
+        NomeacaoPericial resultado =
+                service.alterar(alterada);
 
-        assertSame(alterada, service.obterPorId(1L));
+        assertEquals(
+                "PROCESSO-TESTE-ALTERADO",
+                resultado.getNumeroProcesso()
+        );
 
-        service.excluir(1L);
+        assertEquals(
+                StatusNomeacao.ACEITA,
+                resultado.getStatus()
+        );
 
-        assertEquals(0, service.listarTodos().size());
+        service.excluir(resultado.getId());
+
         assertThrows(
                 EntidadeNaoEncontradaException.class,
-                () -> service.obterPorId(1L)
+                () -> service.obterPorId(resultado.getId())
         );
     }
 
     @Test
-    void deveRejeitarDuplicidadeEIdInexistente() {
-        NomeacaoPericialService service =
-                new NomeacaoPericialService();
-
-        NomeacaoPericial nomeacao = criarNomeacao(
-                1L,
-                "PROCESSO-1",
-                LocalDate.of(2026, 8, 20),
-                StatusNomeacao.RECEBIDA
-        );
-
-        service.incluir(nomeacao);
-
-        assertThrows(
-                EntidadeJaExistenteException.class,
-                () -> service.incluir(nomeacao)
-        );
-
-        assertThrows(
-                EntidadeNaoEncontradaException.class,
-                () -> service.obterPorId(99L)
-        );
-    }
-
-    @Test
-    void deveConsultarNomeacoesComStreams() {
-        NomeacaoPericialService service =
-                new NomeacaoPericialService();
-
+    void deveRejeitarNumeroDeProcessoDuplicado() {
         NomeacaoPericial primeira = criarNomeacao(
-                1L,
-                "PROCESSO-1",
-                LocalDate.of(2026, 9, 10),
-                StatusNomeacao.ACEITA
+                "PROCESSO-TESTE-DUPLICADO",
+                LocalDate.of(2026, 10, 23),
+                StatusNomeacao.RECEBIDA
         );
 
         NomeacaoPericial segunda = criarNomeacao(
-                2L,
-                "PROCESSO-2",
-                LocalDate.of(2026, 8, 10),
+                "PROCESSO-TESTE-DUPLICADO",
+                LocalDate.of(2026, 10, 24),
                 StatusNomeacao.RECEBIDA
         );
 
         service.incluir(primeira);
-        service.incluir(segunda);
 
-        assertEquals(
-                1,
-                service.listarPorStatus(
-                        StatusNomeacao.RECEBIDA
-                ).size()
+        assertThrows(
+                EntidadeJaExistenteException.class,
+                () -> service.incluir(segunda)
         );
 
-        assertEquals(
-                List.of(segunda, primeira),
-                service.listarOrdenadasPorPrazo()
-        );
-
-        assertSame(
-                primeira,
-                service.obterPorNumeroProcesso("PROCESSO-1")
-        );
-
-        assertEquals(
-                List.of("PROCESSO-1", "PROCESSO-2"),
-                service.listarNumerosProcessos()
+        assertThrows(
+                EntidadeNaoEncontradaException.class,
+                () -> service.obterPorId(99999L)
         );
     }
 
+    @Test
+    void deveExecutarConsultasPersonalizadas() {
+        NomeacaoPericial primeira = service.incluir(
+                criarNomeacao(
+                        "PROCESSO-TESTE-CONSULTA-1",
+                        LocalDate.of(2026, 11, 10),
+                        StatusNomeacao.ACEITA
+                )
+        );
+
+        NomeacaoPericial segunda = service.incluir(
+                criarNomeacao(
+                        "PROCESSO-TESTE-CONSULTA-2",
+                        LocalDate.of(2026, 10, 10),
+                        StatusNomeacao.RECEBIDA
+                )
+        );
+
+        List<NomeacaoPericial> recebidas =
+                service.listarPorStatus(
+                        StatusNomeacao.RECEBIDA
+                );
+
+        assertTrue(
+                recebidas.stream().anyMatch(nomeacao ->
+                        nomeacao.getId().equals(segunda.getId())
+                )
+        );
+
+        List<NomeacaoPericial> ordenadas =
+                service.listarOrdenadasPorPrazo();
+
+        int posiçãoPrimeira = índiceDaNomeacao(
+                ordenadas,
+                primeira.getId()
+        );
+
+        int posiçãoSegunda = índiceDaNomeacao(
+                ordenadas,
+                segunda.getId()
+        );
+
+        assertTrue(posiçãoSegunda < posiçãoPrimeira);
+
+        NomeacaoPericial encontrada =
+                service.obterPorNumeroProcesso(
+                        "PROCESSO-TESTE-CONSULTA-1"
+                );
+
+        assertEquals(
+                primeira.getId(),
+                encontrada.getId()
+        );
+
+        assertTrue(
+                service.listarNumerosProcessos()
+                        .contains("PROCESSO-TESTE-CONSULTA-1")
+        );
+    }
+
+    private int índiceDaNomeacao(
+            List<NomeacaoPericial> nomeacoes,
+            Long id
+    ) {
+        for (int índice = 0;
+             índice < nomeacoes.size();
+             índice++) {
+
+            if (nomeacoes.get(índice).getId().equals(id)) {
+                return índice;
+            }
+        }
+
+        return -1;
+    }
+
     private NomeacaoPericial criarNomeacao(
+            String numeroProcesso,
+            LocalDate dataNomeacao,
+            StatusNomeacao status
+    ) {
+        HonorariosPericiais honorarios =
+                new HonorariosPericiais(
+                        new BigDecimal("1000.00")
+                );
+
+        NomeacaoPericial nomeacao =
+                new NomeacaoPericial(
+                        numeroProcesso,
+                        dataNomeacao,
+                        5,
+                        honorarios
+                );
+
+        Perito perito =
+                peritoService.listarTodos().getFirst();
+
+        nomeacao.associarPerito(perito);
+        nomeacao.alterarStatus(status);
+        return nomeacao;
+    }
+
+    private NomeacaoPericial criarNomeacaoComId(
             Long id,
             String numeroProcesso,
             LocalDate dataNomeacao,
@@ -157,6 +238,9 @@ class NomeacaoPericialServiceTest {
                         honorarios
                 );
 
+        Perito perito =
+                peritoService.listarTodos().getFirst();
+        nomeacao.associarPerito(perito);
         nomeacao.alterarStatus(status);
         return nomeacao;
     }

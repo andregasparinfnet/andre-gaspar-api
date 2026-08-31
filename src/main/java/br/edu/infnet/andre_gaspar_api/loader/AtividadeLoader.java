@@ -3,7 +3,6 @@ package br.edu.infnet.andre_gaspar_api.loader;
 import br.edu.infnet.andre_gaspar_api.model.AtividadePericial;
 import br.edu.infnet.andre_gaspar_api.model.NomeacaoPericial;
 import br.edu.infnet.andre_gaspar_api.service.AtividadePericialService;
-import br.edu.infnet.andre_gaspar_api.service.NomeacaoPericialService;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.BufferedReader;
@@ -16,8 +15,8 @@ import java.util.List;
 public class AtividadeLoader {
 
     public List<AtividadePericial> carregar(
-            NomeacaoPericialService nomeacaoPericialService,
-            AtividadePericialService atividadePericialService
+            NomeacaoLoader nomeacaoLoader,
+            AtividadePericialService atividadeService
     ) throws IOException {
 
         ClassPathResource arquivo =
@@ -40,18 +39,22 @@ public class AtividadeLoader {
 
                 String[] campos = linha.split(";", -1);
 
-                Long id = Long.valueOf(campos[0]);
-                Long nomeacaoId = Long.valueOf(campos[1]);
+                Long nomeacaoIdOrigem =
+                        Long.valueOf(campos[1]);
+
                 String descricao = campos[2];
-                LocalDate prazo = LocalDate.parse(campos[3]);
+
+                LocalDate prazo =
+                        LocalDate.parse(campos[3]);
+
                 double horasEstimadas =
                         Double.parseDouble(campos[4]);
+
                 boolean concluida =
                         Boolean.parseBoolean(campos[5]);
 
                 AtividadePericial atividade =
                         new AtividadePericial(
-                                id,
                                 descricao,
                                 prazo,
                                 horasEstimadas
@@ -62,13 +65,21 @@ public class AtividadeLoader {
                 }
 
                 NomeacaoPericial nomeacao =
-                        nomeacaoPericialService.obterPorId(nomeacaoId);
+                        nomeacaoLoader.obterPorIdOrigem(
+                                nomeacaoIdOrigem
+                        );
 
-                nomeacao.adicionarAtividade(atividade);
-                atividadePericialService.incluir(atividade);
+                atividade.associarNomeacao(nomeacao);
+
+                AtividadePericial atividadePersistida =
+                        atividadeService.incluir(atividade);
+
+                nomeacao.adicionarAtividade(
+                        atividadePersistida
+                );
             }
         }
 
-        return atividadePericialService.listarTodos();
+        return atividadeService.listarTodos();
     }
 }
